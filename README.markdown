@@ -104,7 +104,7 @@ As of the latest update, the following elements are functional:
    ```
 
 4. **Download Apktool**:
-   - Download `apktool_2.11.1.jar` from [Apktool's official site](https://ibotpeaches.github.io/Apktool/) and place it in the project root.
+   - Download `apktool_2.11.1.jar` from [Apktool's official site](https://apktool.org/) and place it in the project root.
 
 5. **Run the App**:
    ```bash
