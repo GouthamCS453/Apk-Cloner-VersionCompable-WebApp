@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Cloner Webapp</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Cloner Webapp</h2>
+            <button class="sidebar-toggle"><i class="fas fa-bars"></i></button>
+        </div>
+        <div class="sidebar-user">
+            <p><i class="fas fa-user"></i> <span>Welcome, User</span></p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}"><i class="fas fa-home"></i> <span>Home</span></a>
+            <a href="{{ url_for('projects') }}" class="{% if request.endpoint == 'projects' or request.endpoint == 'project_view' %}active{% endif %}"><i class="fas fa-folder"></i> <span>Projects ({{ project_count }})</span></a>
+        </nav>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="main-content" id="mainContent">
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('#sidebar');
+            const mainContent = document.querySelector('#mainContent');
+            const sidebarToggle = document.querySelector('.sidebar-toggle');
+            const sidebarOverlay = document.querySelector('#sidebarOverlay');
+            const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+
+            if (!sidebar || !mainContent || !sidebarToggle || !sidebarOverlay) {
+                console.error('Required sidebar elements not found:', { sidebar, mainContent, sidebarToggle, sidebarOverlay });
+                return;
+            }
+
+            // Check if the device is mobile (screen width <= 768px)
+            function isMobile() {
+                return window.innerWidth <= 768;
+            }
+
+            // Load sidebar state from localStorage (default to collapsed)
+            function loadSidebarState() {
+                const savedState = localStorage.getItem('sidebarState');
+                if (savedState === 'expanded') {
+                    sidebar.classList.add('expanded');
+                } else {
+                    sidebar.classList.remove('expanded');
+                }
+                updateMainContentMargin();
+            }
+
+            function updateMainContentMargin() {
+                if (isMobile()) {
+                    if (sidebar.classList.contains('expanded')) {
+                        mainContent.style.marginLeft = '0';
+                        mainContent.style.width = '100%';
+                        mainContent.classList.add('expanded');
+                        sidebarOverlay.classList.add('active');
+                    } else {
+                        mainContent.style.marginLeft = window.innerWidth <= 480 ? '50px' : '60px';
+                        mainContent.style.width = window.innerWidth <= 480 ? 'calc(100% - 50px)' : 'calc(100% - 60px)';
+                        mainContent.classList.remove('expanded');
+                        sidebarOverlay.classList.remove('active');
+                    }
+                } else {
+                    if (sidebar.classList.contains('expanded')) {
+                        mainContent.style.marginLeft = window.matchMedia('(min-aspect-ratio: 2/1)').matches ? '10vw' : 
+                            (window.matchMedia('(max-aspect-ratio: 3/4)').matches ? '25vw' : '15vw');
+                        mainContent.style.width = window.matchMedia('(min-aspect-ratio: 2/1)').matches ? 'calc(100% - 10vw)' : 
+                            (window.matchMedia('(max-aspect-ratio: 3/4)').matches ? 'calc(100% - 25vw)' : 'calc(100% - 15vw)');
+                        mainContent.classList.add('expanded');
+                        sidebarOverlay.classList.remove('active');
+                    } else {
+                        mainContent.style.marginLeft = window.matchMedia('(min-aspect-ratio: 2/1)').matches ? '50px' : 
+                            (window.matchMedia('(max-aspect-ratio: 3/4)').matches ? '50px' : '60px');
+                        mainContent.style.width = window.matchMedia('(min-aspect-ratio: 2/1)').matches ? 'calc(100% - 50px)' : 
+                            (window.matchMedia('(max-aspect-ratio: 3/4)').matches ? 'calc(100% - 50px)' : 'calc(100% - 60px)');
+                        mainContent.classList.remove('expanded');
+                        sidebarOverlay.classList.remove('active');
+                    }
+                }
+
+                // Add or remove tooltips based on sidebar state
+                sidebarLinks.forEach(link => {
+                    const span = link.querySelector('span');
+                    if (span) {
+                        const tooltip = link.querySelector('.tooltip');
+                        if (!sidebar.classList.contains('expanded')) {
+                            if (!tooltip) {
+                                const newTooltip = document.createElement('div');
+                                newTooltip.className = 'tooltip';
+                                newTooltip.textContent = span.textContent;
+                                link.appendChild(newTooltip);
+                            }
+                        } else {
+                            if (tooltip) {
+                                tooltip.remove();
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Toggle sidebar and save state
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('expanded');
+                localStorage.setItem('sidebarState', sidebar.classList.contains('expanded') ? 'expanded' : 'collapsed');
+                updateMainContentMargin();
+            });
+
+            // Close sidebar when clicking the overlay (mobile only)
+            sidebarOverlay.addEventListener('click', () => {
+                if (isMobile()) {
+                    sidebar.classList.remove('expanded');
+                    localStorage.setItem('sidebarState', 'collapsed');
+                    updateMainContentMargin();
+                }
+            });
+
+            window.addEventListener('resize', updateMainContentMargin);
+
+            // Initial state
+            loadSidebarState();
+        });
+    </script>
+</body>
+</html>
